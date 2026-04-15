@@ -55,6 +55,11 @@ def _generate_horoscope(zodiac: str, target_date: str) -> dict:
     )
 
     raw = response.content[0].text.strip()
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
     return json.loads(raw)
 
 

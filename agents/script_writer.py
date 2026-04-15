@@ -109,8 +109,26 @@ def run(run_id: str, content_id: Optional[int] = None) -> int:
     )
 
     raw = response.content[0].text.strip()
-    script_data = json.loads(raw)
-    assert "hook" in script_data and "segments" in script_data and len(script_data["segments"]) > 0
+    # Strip markdown code fences if Claude wrapped the JSON
+    if raw.startswith("```"):
+        raw = raw.split("```")[1]
+        if raw.startswith("json"):
+            raw = raw[4:]
+        raw = raw.strip()
+
+    if not raw:
+        log("script_writer", run_id, "error", "Claude hat leere Antwort zurückgegeben")
+        return -1
+
+    try:
+        script_data = json.loads(raw)
+    except json.JSONDecodeError as e:
+        log("script_writer", run_id, "error", f"JSON-Parse-Fehler: {e} | Antwort: {raw[:200]}")
+        return -1
+
+    if "hook" not in script_data or "segments" not in script_data or len(script_data["segments"]) == 0:
+        log("script_writer", run_id, "error", f"Ungültiges Script-Schema: {list(script_data.keys())}")
+        return -1
 
     sb.table("content_pieces").update({
         "script": json.dumps(script_data, ensure_ascii=False),
