@@ -66,7 +66,7 @@ def _generate_image(client: OpenAI, prompt: str, out_path: str):
         f.write(img_data)
 
 
-def _generate_tts(text: str, out_path: str):
+def _generate_tts_elevenlabs(text: str, out_path: str):
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{settings.elevenlabs_voice_id}"
     resp = requests.post(
         url,
@@ -78,6 +78,27 @@ def _generate_tts(text: str, out_path: str):
     resp.raise_for_status()
     with open(out_path, "wb") as f:
         f.write(resp.content)
+
+
+def _generate_tts_openai(text: str, out_path: str):
+    client = OpenAI(api_key=settings.openai_api_key)
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="nova",   # warm, feminine — gut für Horoskope
+        input=text,
+    )
+    response.stream_to_file(out_path)
+
+
+def _generate_tts(text: str, out_path: str):
+    """ElevenLabs with automatic fallback to OpenAI TTS."""
+    if settings.elevenlabs_api_key:
+        try:
+            _generate_tts_elevenlabs(text, out_path)
+            return
+        except Exception as e:
+            logger.warning("ElevenLabs fehlgeschlagen (%s) – nutze OpenAI TTS als Fallback", e)
+    _generate_tts_openai(text, out_path)
 
 
 def _get_audio_duration(mp3_path: str) -> float:
