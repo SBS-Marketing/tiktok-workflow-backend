@@ -9,7 +9,6 @@ moviepy==1.0.3
 mutagen==1.47.0
 pillow==10.3.0
 pytrends==4.9.2
-praw==7.7.1
 requests==2.32.3
 apscheduler==3.10.4
 python-multipart==0.0.9

@@ -1,6 +1,6 @@
 """
 Agent 1 – Trend Scout
-Pulls trending topics from Google Trends, Reddit, and TikTok Creative Center,
+Pulls trending topics from Google Trends and TikTok Creative Center,
 then uses Claude to score and rank them for TikTok virality.
 """
 import json
@@ -51,31 +51,6 @@ def _fetch_google_trends(keywords: List[str]) -> List[str]:
         logger.warning("pytrends failed: %s", e)
         return []
 
-
-def _fetch_reddit(keywords: List[str]) -> List[str]:
-    try:
-        if not settings.reddit_client_id:
-            return []
-        import praw
-        reddit = praw.Reddit(
-            client_id=settings.reddit_client_id,
-            client_secret=settings.reddit_client_secret,
-            user_agent=settings.reddit_user_agent,
-            check_for_async=False,
-        )
-        subreddits = ["fitness", "motivation", "technology", "personalfinance", "mindset"]
-        topics = []
-        for sub in subreddits[:3]:
-            try:
-                for post in reddit.subreddit(sub).hot(limit=10):
-                    if not post.stickied:
-                        topics.append(post.title)
-            except Exception:
-                pass
-        return topics
-    except Exception as e:
-        logger.warning("Reddit fetch failed: %s", e)
-        return []
 
 
 def _fetch_tiktok_cc() -> List[str]:
@@ -140,13 +115,10 @@ def run(run_id: str) -> List[int]:
     google_topics = _fetch_google_trends(niche_keywords)
     log("trend_scout", run_id, "info", f"Google Trends: {len(google_topics)} Themen")
 
-    reddit_topics = _fetch_reddit(niche_keywords)
-    log("trend_scout", run_id, "info", f"Reddit: {len(reddit_topics)} Themen")
-
     tiktok_topics = _fetch_tiktok_cc()
     log("trend_scout", run_id, "info", f"TikTok Creative Center: {len(tiktok_topics)} Themen")
 
-    all_topics = list(set(google_topics + reddit_topics + tiktok_topics))
+    all_topics = list(set(google_topics + tiktok_topics))
     if not all_topics:
         all_topics = [f"{kw} tips for beginners" for kw in niche_keywords]
         log("trend_scout", run_id, "warning", "Keine externen Trends gefunden, nutze Fallback-Themen")
