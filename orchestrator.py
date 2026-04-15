@@ -55,5 +55,10 @@ async def run_pipeline():
         except Exception as e:
             stage = _pipeline_state.get("current_stage", "unknown")
             logger.error("[orchestrator] Pipeline FEHLER bei %s: %s", stage, e)
+            try:
+                from supabase_client import log as sb_log
+                sb_log("orchestrator", run_id, "error", f"Pipeline FEHLER bei {stage}: {e}")
+            except Exception:
+                pass
         finally:
             _pipeline_state.update({"is_running": False, "run_id": None, "current_stage": None})

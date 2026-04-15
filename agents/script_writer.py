@@ -38,11 +38,14 @@ ZODIAC_EMOJIS = {
 def run(run_id: str, content_id: Optional[int] = None) -> int:
     sb = get_client()
 
-    if content_id:
-        result = sb.table("content_pieces").select("*").eq("id", content_id).eq("status", "TREND_SCORED").single().execute()
-    else:
-        result = sb.table("content_pieces").select("*").eq("status", "TREND_SCORED").order("trend_score", desc=True).limit(1).execute()
-        result.data = result.data[:1]
+    try:
+        if content_id:
+            result = sb.table("content_pieces").select("*").eq("id", content_id).eq("status", "TREND_SCORED").execute()
+        else:
+            result = sb.table("content_pieces").select("*").eq("status", "TREND_SCORED").order("trend_score", desc=True).limit(1).execute()
+    except Exception as e:
+        log("script_writer", run_id, "error", f"DB-Abfrage fehlgeschlagen: {e}")
+        return -1
 
     if not result.data:
         log("script_writer", run_id, "warning", "Kein TREND_SCORED ContentPiece gefunden, überspringe")
