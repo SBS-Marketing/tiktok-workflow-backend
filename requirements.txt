@@ -1,0 +1,16 @@
+fastapi==0.111.0
+uvicorn[standard]==0.30.1
+pydantic-settings==2.3.1
+python-dotenv==1.0.1
+anthropic==0.28.0
+openai==1.35.0
+supabase==2.5.3
+moviepy==1.0.3
+mutagen==1.47.0
+pillow==10.3.0
+pytrends==4.9.2
+praw==7.7.1
+requests==2.32.3
+apscheduler==3.10.4
+python-multipart==0.0.9
+aiofiles==23.2.1
