@@ -45,21 +45,32 @@ def run(run_id: str, content_id: Optional[int] = None) -> int:
     piece = result.data[0]
     log("script_writer", run_id, "info", f"Schreibe Script für #{piece['id']}: '{piece['trend_topic']}'")
 
+    from supabase_client import get_config
+    zodiac = get_config("zodiac_sign", "Steinbock")
+    target_date = get_config("horoscope_date", "heute")
+
     client = anthropic.Anthropic(api_key=settings.anthropic_api_key)
     response = client.messages.create(
         model="claude-sonnet-4-6",
         max_tokens=3000,
         system=(
-            "You are a viral TikTok scriptwriter. You specialize in short-form video scripts "
-            "that hook viewers in the first 3 seconds. Always output valid JSON only, no markdown."
+            "Du bist ein erfahrener Astrologe und viraler TikTok-Creator. "
+            "Du schreibst mitreißende Tageshoroskop-Videos auf Deutsch. "
+            "Dein Stil ist mystisch, warm und inspirierend. "
+            "Antworte ausschließlich mit validem JSON, kein Markdown."
         ),
         messages=[{
             "role": "user",
             "content": (
-                f"Write a TikTok script for: '{piece['trend_topic']}'\n"
-                f"Niche: {piece['niche']}\n"
-                f"Target duration: 30-60 seconds, 4-7 segments.\n\n"
-                f"Return ONLY this JSON schema:\n{SCRIPT_SCHEMA}"
+                f"Schreibe ein TikTok-Tageshoroskop-Video-Script für:\n"
+                f"- Sternzeichen: {zodiac}\n"
+                f"- Datum: {target_date}\n"
+                f"- Thema: '{piece['trend_topic']}'\n"
+                f"- Zieldauer: 45-60 Sekunden, 4-6 Segmente\n\n"
+                f"Das Script soll auf Deutsch sein. Beginne mit einem Hook der sofort fesselt "
+                f"(z.B. '✨ {zodiac}! Was die Sterne heute für dich bereithalten...'). "
+                f"Jedes Segment braucht einen konkreten DALL-E Bildprompt (vertikal 9:16, mystisch).\n\n"
+                f"Antworte NUR mit diesem JSON-Schema:\n{SCRIPT_SCHEMA}"
             ),
         }],
     )
