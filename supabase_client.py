@@ -17,8 +17,10 @@ def get_client() -> Client:
 
 def get_config(key: str, fallback: str = "") -> str:
     try:
-        result = get_client().table("app_config").select("value").eq("key", key).single().execute()
-        return result.data.get("value") or fallback
+        result = get_client().table("app_config").select("value").eq("key", key).execute()
+        if result.data:
+            return result.data[0].get("value") or fallback
+        return fallback
     except Exception:
         return fallback
 
@@ -30,9 +32,12 @@ def set_config(key: str, value: str):
 def log(agent_name: str, run_id: str, level: str, message: str):
     import logging
     logging.getLogger(agent_name).info("[%s] %s", agent_name, message)
-    get_client().table("agent_logs").insert({
-        "agent_name": agent_name,
-        "level": level,
-        "message": message,
-        "run_id": run_id,
-    }).execute()
+    try:
+        get_client().table("agent_logs").insert({
+            "agent_name": agent_name,
+            "level": level,
+            "message": message,
+            "run_id": run_id,
+        }).execute()
+    except Exception:
+        pass
